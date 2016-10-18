@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenTracing.Propagation;
 using Xunit;
 
 namespace OpenTracing.BasicTracer.IntegrationTests
@@ -37,7 +38,7 @@ namespace OpenTracing.BasicTracer.IntegrationTests
 
             var data = new Dictionary<string, string>();
 
-            tracer.InjectTextMap(span.Context, data);
+            tracer.Inject(span.Context, Formats.TextMap, new DictionaryCarrier(data));
 
             Assert.Equal(traceId.ToString(), data["ot-traceid"]);
             Assert.Equal(spanId.ToString(), data["ot-spanid"]);
@@ -50,7 +51,7 @@ namespace OpenTracing.BasicTracer.IntegrationTests
 
             var data = new Dictionary<string, string>();
 
-            var spanContext = tracer.ExtractTextMap(data);
+            var spanContext = tracer.Extract(Formats.TextMap, new DictionaryCarrier(data));
 
             Assert.Null(spanContext);
         }
@@ -69,7 +70,7 @@ namespace OpenTracing.BasicTracer.IntegrationTests
                 { "ot-spanid", testSpanId.ToString() },
             };
 
-            var spanContext = (SpanContext)tracer.ExtractTextMap(data);
+            var spanContext = (SpanContext)tracer.Extract(Formats.TextMap, new DictionaryCarrier(data));
 
             Assert.NotNull(spanContext);
 

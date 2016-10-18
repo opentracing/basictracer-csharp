@@ -66,7 +66,29 @@ namespace OpenTracing.BasicTracer
             return this;
         }
 
-        public virtual ISpan SetTag(string key, object value)
+        public virtual ISpan SetTag(string key, bool value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            Tags[key] = value;
+            return this;
+        }
+
+        public virtual ISpan SetTag(string key, double value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            Tags[key] = value;
+            return this;
+        }
+
+        public virtual ISpan SetTag(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
             {

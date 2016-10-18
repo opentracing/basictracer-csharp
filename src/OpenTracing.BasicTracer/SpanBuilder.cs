@@ -16,7 +16,7 @@ namespace OpenTracing.BasicTracer
 
         // not initialized to save allocations in case there are no tags.
         private IDictionary<string, object> _tags;
-        
+
         private DateTime? _startTimestamp;
 
         public SpanBuilder(Tracer tracer, string operationName)
@@ -74,7 +74,13 @@ namespace OpenTracing.BasicTracer
             return this;
         }
 
-        public ISpanBuilder WithTag(string key, object value)
+        public ISpanBuilder WithStartTimestamp(DateTime startTimestamp)
+        {
+            _startTimestamp = startTimestamp;
+            return this;
+        }
+
+        public ISpanBuilder WithTag(string key, bool value)
         {
             if (_tags == null)
             {
@@ -85,9 +91,25 @@ namespace OpenTracing.BasicTracer
             return this;
         }
 
-        public ISpanBuilder WithStartTimestamp(DateTime startTimestamp)
+        public ISpanBuilder WithTag(string key, double value)
         {
-            _startTimestamp = startTimestamp;
+            if (_tags == null)
+            {
+                _tags = new Dictionary<string, object>();
+            }
+
+            _tags[key] = value;
+            return this;
+        }
+
+        public ISpanBuilder WithTag(string key, string value)
+        {
+            if (_tags == null)
+            {
+                _tags = new Dictionary<string, object>();
+            }
+
+            _tags[key] = value;
             return this;
         }
 
@@ -95,5 +117,7 @@ namespace OpenTracing.BasicTracer
         {
             return _tracer.StartSpan(_operationName, _startTimestamp, _references, _tags);
         }
+
+
     }
 }
