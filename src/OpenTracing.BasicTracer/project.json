@@ -15,7 +15,7 @@
   },
 
   "dependencies": {
-    "OpenTracing": "0.9.0-*"
+    "OpenTracing": "0.9.0"
   },
 
   "frameworks": {

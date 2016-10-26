@@ -102,6 +102,17 @@ namespace OpenTracing.BasicTracer
             return this;
         }
 
+        public ISpanBuilder WithTag(string key, int value)
+        {
+            if (_tags == null)
+            {
+                _tags = new Dictionary<string, object>();
+            }
+
+            _tags[key] = value;
+            return this;
+        }
+
         public ISpanBuilder WithTag(string key, string value)
         {
             if (_tags == null)

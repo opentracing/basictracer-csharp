@@ -1,7 +1,6 @@
 {
   "projects": [
     "src",
-    "test",
-    "../opentracing-csharp/src"
+    "test"
   ]
 }

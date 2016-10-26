@@ -1,18 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace OpenTracing.BasicTracer
 {
     public struct LogData
     {
-        public LogData(DateTime timestamp, string eventName, object payload)
+        public LogData(DateTime timestamp, IEnumerable<KeyValuePair<string, object>> fields)
         {
             Timestamp = timestamp;
-            EventName = eventName;
-            Payload = payload;
+            Fields = fields;
         }
 
-        public DateTime Timestamp { get; private set; }
-        public string EventName { get; private set; }
-        public object Payload { get; private set; }
+        public DateTime Timestamp { get; }
+
+        public IEnumerable<KeyValuePair<string, object>> Fields { get; }
     }
 }

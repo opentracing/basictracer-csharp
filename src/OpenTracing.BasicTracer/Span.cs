@@ -88,6 +88,17 @@ namespace OpenTracing.BasicTracer
             return this;
         }
 
+        public virtual ISpan SetTag(string key, int value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            Tags[key] = value;
+            return this;
+        }
+
         public virtual ISpan SetTag(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -99,20 +110,25 @@ namespace OpenTracing.BasicTracer
             return this;
         }
 
-        public virtual ISpan LogEvent(string eventName, object payload = null)
+        public ISpan Log(IEnumerable<KeyValuePair<string, object>> fields)
         {
-            return LogEvent(DateTime.UtcNow, eventName, payload);
+            return Log(DateTime.UtcNow, fields);
         }
 
-        public virtual ISpan LogEvent(DateTime timestamp, string eventName, object payload = null)
+        public ISpan Log(DateTime timestamp, IEnumerable<KeyValuePair<string, object>> fields)
         {
-            if (string.IsNullOrWhiteSpace(eventName))
-            {
-                throw new ArgumentNullException(nameof(eventName));
-            }
-
-            Logs.Add(new LogData(timestamp, eventName, payload));
+            Logs.Add(new LogData(timestamp, fields));
             return this;
+        }
+
+        public ISpan Log(string eventName)
+        {
+            return Log(DateTime.UtcNow, eventName);
+        }
+
+        public ISpan Log(DateTime timestamp, string eventName)
+        {
+            return Log(timestamp, new Dictionary<string, object> { { "event", eventName }});
         }
 
         public ISpan SetBaggageItem(string key, string value)
@@ -126,13 +142,23 @@ namespace OpenTracing.BasicTracer
             return _context.GetBaggageItem(key);
         }
 
-        public virtual void Finish(DateTime? finishTimestamp = null)
+        public void Finish()
+        {
+            Finish(DateTime.UtcNow);
+        }
+
+        public void Finish(DateTime finishTimestamp)
         {
             if (FinishTimestamp.HasValue)
                 return;
 
-            FinishTimestamp = finishTimestamp ?? DateTime.UtcNow;
+            FinishTimestamp = finishTimestamp;
             OnFinished();
+        }
+
+        public void Dispose()
+        {
+            Finish();
         }
 
         protected void OnFinished()
@@ -148,11 +174,6 @@ namespace OpenTracing.BasicTracer
             };
 
             _spanRecorder.RecordSpan(spanData);
-        }
-
-        public void Dispose()
-        {
-            Finish();
         }
     }
 }
