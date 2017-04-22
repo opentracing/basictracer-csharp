@@ -1,14 +1,14 @@
 Properties {
 
-    # This number will be appended to all nuget package versions
+    # This number will be appended to all nuget package versions and to the service fabric app versions
     # This should be overwritten by a CI system like VSTS, AppVeyor, TeamCity, ...
-    $BuildNumber = "" + ((Get-Date).ToUniversalTime().ToString("yyyyMMddHHmm"))
+    $BuildNumber = "loc" + ((Get-Date).ToUniversalTime().ToString("yyyyMMddHHmm"))
 
     # The build configuration used for compilation
     $BuildConfiguration = "Release"
 
     # The folder in which all output packages should be placed
-    $ArtifactsPath = "artifacts"
+    $ArtifactsPath = Join-Path $PWD "artifacts"
 
     # Artifacts-subfolder in which test results will be placed
     $ArtifactsPathTests = "tests"
@@ -28,11 +28,11 @@ Task Default -depends init, clean, dotnet-install, dotnet-restore, dotnet-build,
 
 Task init {
 
-    Write-Output "BuildNumber: $BuildNumber"
-    Write-Output "BuildConfiguration: $BuildConfiguration"
-    Write-Output "ArtifactsPath: $ArtifactsPath"
-    Write-Output "ArtifactsPathTests: $ArtifactsPathTests"
-    Write-Output "ArtifactsPathNuGet: $ArtifactsPathNuGet"
+    Write-Host "BuildNumber: $BuildNumber"
+    Write-Host "BuildConfiguration: $BuildConfiguration"
+    Write-Host "ArtifactsPath: $ArtifactsPath"
+    Write-Host "ArtifactsPathTests: $ArtifactsPathTests"
+    Write-Host "ArtifactsPathNuGet: $ArtifactsPathNuGet"
 
     Assert ($BuildNumber -ne $null) "Property 'BuildNumber' may not be null."
     Assert ($BuildConfiguration -ne $null) "Property 'BuildConfiguration' may not be null."
@@ -46,16 +46,16 @@ Task clean {
     if (Test-Path $ArtifactsPath) { Remove-Item -Path $ArtifactsPath -Recurse -Force -ErrorAction Ignore }
     New-Item $ArtifactsPath -ItemType Directory -ErrorAction Ignore | Out-Null
 
-    Write-Output "Created artifacts folder '$ArtifactsPath'"
+    Write-Host "Created artifacts folder '$ArtifactsPath'"
 }
 
 Task dotnet-install {
 
     if (Get-Command "dotnet.exe" -ErrorAction SilentlyContinue) {
-        Write-Output "dotnet SDK already installed"
+        Write-Host "dotnet SDK already installed"
         exec { dotnet --version }
     } else {
-        Write-Output "Installing dotnet SDK"
+        Write-Host "Installing dotnet SDK"
 
         $installScript = Join-Path $ArtifactsPath "dotnet-install.ps1"
 
@@ -73,7 +73,7 @@ Task dotnet-restore {
 
 Task dotnet-build {
 
-    exec { dotnet build **\project.json -c $BuildConfiguration --version-suffix $BuildNumber }
+    exec { dotnet build -c $BuildConfiguration --version-suffix $BuildNumber }
 }
 
 Task dotnet-test {
@@ -83,23 +83,18 @@ Task dotnet-test {
 
     $testsFailed = $false
 
-    Get-ChildItem -Filter project.json -Recurse | ForEach-Object {
+    Get-ChildItem .\test -Filter *.csproj -Recurse | ForEach-Object {
 
-        $projectJson = Get-Content -Path $_.FullName -Raw -ErrorAction Ignore | ConvertFrom-Json -ErrorAction Ignore
+        $library = Split-Path $_.DirectoryName -Leaf
+        $testResultOutput = Join-Path $testOutput "$library.trx"
 
-        if ($projectJson -and $projectJson.testRunner -ne $null)
-        {
-            $library = Split-Path $_.DirectoryName -Leaf
-            $testResultOutput = Join-Path $testOutput "$library.xml"
+        Write-Host ""
+        Write-Host "Testing $library"
+        Write-Host ""
 
-            Write-Output ""
-            Write-Output "Testing $library"
-            Write-Output ""
-
-            dotnet test $_.Directory -c $BuildConfiguration --no-build -xml $testResultOutput
-            if ($LASTEXITCODE -ne 0) {
-                $testsFailed = $true
-            }
+        dotnet test $_.FullName -c $BuildConfiguration --no-build --logger "trx;LogFileName=$testResultOutput"
+        if ($LASTEXITCODE -ne 0) {
+            $testsFailed = $true
         }
     }
 
@@ -111,7 +106,7 @@ Task dotnet-test {
 Task dotnet-pack {
 
     if ($NugetLibraries -eq $null -or $NugetLibraries.Count -eq 0) {
-        Write-Output "No NugetLibraries configured"
+        Write-Host "No NugetLibraries configured"
         return
     }
 
@@ -120,10 +115,10 @@ Task dotnet-pack {
         $library = $_
         $libraryOutput = Join-Path $ArtifactsPath $ArtifactsPathNuGet
 
-        Write-Output ""
-        Write-Output "Packaging $library to $libraryOutput"
-        Write-Output ""
+        Write-Host ""
+        Write-Host "Packaging $library to $libraryOutput"
+        Write-Host ""
 
-        exec { dotnet pack $library -c $BuildConfiguration --version-suffix $BuildNumber --no-build -o $libraryOutput }
+        exec { dotnet pack $library -c $BuildConfiguration --version-suffix $BuildNumber --no-build --include-symbols -o $libraryOutput }
     }
 }
