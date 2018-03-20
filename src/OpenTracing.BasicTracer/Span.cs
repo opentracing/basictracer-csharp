@@ -12,8 +12,8 @@ namespace OpenTracing.BasicTracer
         public ISpanContext Context => _context;
 
         public string OperationName { get; private set; }
-        public DateTime StartTimestamp { get; }
-        public DateTime? FinishTimestamp { get; private set; }
+        public DateTimeOffset StartTimestamp { get; }
+        public DateTimeOffset? FinishTimestamp { get; private set; }
 
         public IDictionary<string, object> Tags { get; } = new Dictionary<string, object>();
         public IList<LogData> Logs { get; } = new List<LogData>();
@@ -22,7 +22,7 @@ namespace OpenTracing.BasicTracer
             ISpanRecorder spanRecorder,
             SpanContext context,
             string operationName,
-            DateTime startTimestamp,
+            DateTimeOffset startTimestamp,
             IDictionary<string, object> tags)
         {
             if (spanRecorder == null)
@@ -112,10 +112,10 @@ namespace OpenTracing.BasicTracer
 
         public ISpan Log(IEnumerable<KeyValuePair<string, object>> fields)
         {
-            return Log(DateTime.UtcNow, fields);
+            return Log(DateTimeOffset.UtcNow, fields);
         }
 
-        public ISpan Log(DateTime timestamp, IEnumerable<KeyValuePair<string, object>> fields)
+        public ISpan Log(DateTimeOffset timestamp, IEnumerable<KeyValuePair<string, object>> fields)
         {
             Logs.Add(new LogData(timestamp, fields));
             return this;
@@ -123,10 +123,10 @@ namespace OpenTracing.BasicTracer
 
         public ISpan Log(string eventName)
         {
-            return Log(DateTime.UtcNow, eventName);
+            return Log(DateTimeOffset.UtcNow, eventName);
         }
 
-        public ISpan Log(DateTime timestamp, string eventName)
+        public ISpan Log(DateTimeOffset timestamp, string eventName)
         {
             return Log(timestamp, new Dictionary<string, object> { { "event", eventName }});
         }
@@ -144,10 +144,10 @@ namespace OpenTracing.BasicTracer
 
         public void Finish()
         {
-            Finish(DateTime.UtcNow);
+            Finish(DateTimeOffset.UtcNow);
         }
 
-        public void Finish(DateTime finishTimestamp)
+        public void Finish(DateTimeOffset finishTimestamp)
         {
             if (FinishTimestamp.HasValue)
                 return;

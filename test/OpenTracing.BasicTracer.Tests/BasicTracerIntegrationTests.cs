@@ -84,8 +84,8 @@ namespace OpenTracing.BasicTracer.IntegrationTests
             var recorder = new SimpleMockRecorder();
             var tracer = GetTracer(recorder: recorder);
 
-            var startTimestamp = new DateTime(2016, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-            var finishTimestamp = new DateTime(2016, 1, 1, 12, 0, 5, DateTimeKind.Utc);
+            var startTimestamp = new DateTimeOffset(2016, 1, 1, 12, 0, 0, TimeSpan.Zero);
+            var finishTimestamp = new DateTimeOffset(2016, 1, 1, 12, 0, 5, TimeSpan.Zero);
 
             var span = tracer.BuildSpan("TestOperation")
                 .WithStartTimestamp(startTimestamp)
